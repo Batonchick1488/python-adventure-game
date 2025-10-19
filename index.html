@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Python Adventure</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            color: white;
+        }
+        .game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(0,0,0,0.8);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .python-logo {
+            font-size: 48px;
+            color: #3776ab;
+            margin-bottom: 10px;
+        }
+        .scene {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 200px;
+        }
+        .choices {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .choice-btn {
+            background: #3776ab;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        .choice-btn:hover {
+            background: #2b5c8a;
+            transform: translateY(-2px);
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Consolas', monospace;
+            margin: 10px 0;
+            border-left: 4px solid #3776ab;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .error {
+            color: #f44336;
+        }
+        .completed {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="python-logo">🐍</div>
+            <h1>PYTHON ADVENTURE</h1>
+            <p>Изучай Python через приключения!</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <strong>Уровень</strong>
+                <div id="level">1</div>
+            </div>
+            <div class="stat-item">
+                <strong>Опыт</strong>
+                <div id="xp">0/100</div>
+            </div>
+            <div class="stat-item">
+                <strong>Задачи</strong>
+                <div id="tasks">0/5</div>
+            </div>
+            <div class="stat-item">
+                <strong>Очки</strong>
+                <div id="score">0</div>
+            </div>
+        </div>
+
+        <div class="scene" id="gameScene">
+            <h2>Добро пожаловать в мир Python!</h2>
+            <p>Ты начинающий программист. Выбери свой путь:</p>
+        </div>
+
+        <div class="choices" id="choicesContainer">
+            <!-- Кнопки выбора будут генерироваться JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        class PythonAdventure {
+            constructor() {
+                this.level = 1;
+                this.xp = 0;
+                this.score = 0;
+                this.completedTasks = 0;
+                this.totalTasks = 5;
+                this.currentScene = 'start';
+                this.scenes = this.initializeScenes();
+                this.loadGame();
+                this.showScene('start');
+            }
+
+            initializeScenes() {
+                return {
+                    'start': {
+                        title: 'Начало пути',
+                        text: 'Ты стоишь перед выбором: с чего начать изучение Python?',
+                        choices: [
+                            {
+                                text: '📖 Изучить основы синтаксиса',
+                                next: 'syntax_basics',
+                                xp: 10
+                            },
+                            {
+                                text: '🎮 Сразу написать игру',
+                                next: 'first_game',
+                                xp: 15
+                            },
+                            {
+                                text: '🔧 Разобраться с окружением',
+                                next: 'environment',
+                                xp: 5
+                            }
+                        ]
+                    },
+                    'syntax_basics': {
+                        title: 'Основы синтаксиса',
+                        text: 'Ты изучаешь базовый синтаксис Python. Реши первую задачу:',
+                        code: 'def greet(name):\n    # Напиши функцию приветствия\n    return "Привет, " + name\n\nprint(greet("Анна"))',
+                        choices: [
+                            {
+                                text: '✅ Функция правильная!',
+                                next: 'syntax_success',
+                                xp: 20,
+                                correct: true
+                            },
+                            {
+                                text: '❌ Нужно исправить ошибки',
+                                next: 'syntax_fail',
+                                xp: 5
+                            }
+                        ]
+                    },
+                    'syntax_success': {
+                        title: 'Отлично! 🎉',
+                        text: 'Ты правильно понял синтаксис функций! Твой код работает:\n\n<code class="code-block">Привет, Анна</code>',
+                        choices: [
+                            {
+                                text: '➡️ Продолжить обучение',
+                                next: 'data_structures',
+                                xp: 15
+                            }
+                        ]
+                    },
+                    'first_game': {
+                        title: 'Первая игра',
+                        text: 'Ты решил написать "Угадай число". Выбери подход:',
+                        choices: [
+                            {
+                                text: '🎯 Случайные числа',
+                                next: 'random_game',
+                                xp: 25
+                            },
+                            {
+                                text: '📊 Статистика попыток',
+                                next: 'stats_game',
+                                xp: 30
+                            }
+                        ]
+                    },
+                    'random_game': {
+                        title: 'Игра с random',
+                        text: 'Отличный выбор! Используем модуль random:\n\n<code class="code-block">import random\nnumber = random.randint(1, 100)</code>',
+                        choices: [
+                            {
+                                text: '🎮 Запустить игру',
+                                next: 'game_success',
+                                xp: 40
+                            }
+                        ]
+                    },
+                    'game_success': {
+                        title: 'Успех! 🎮',
+                        text: 'Твоя игра работает! Игроки могут угадывать числа от 1 до 100.',
+                        choices: [
+                            {
+                                text: '📈 Изучить структуры данных',
+                                next: 'data_structures',
+                                xp: 20
+                            }
+                        ]
+                    },
+                    'data_structures': {
+                        title: 'Структуры данных',
+                        text: 'Время изучить списки и словари. Создай список студентов:',
+                        code: 'students = ["Анна", "Борис", "Виктория"]\n# Добавь нового студента\nstudents.???("Григорий")',
+                        choices: [
+                            {
+                                text: '📝 Использовать append()',
+                                next: 'data_success',
+                                xp: 25,
+                                correct: true
+                            },
+                            {
+                                text: '➕ Использовать add()',
+                                next: 'data_fail',
+                                xp: 5
+                            }
+                        ]
+                    },
+                    'data_success': {
+                        title: 'Правильно! 📚',
+                        text: 'Ты верно использовал метод append() для добавления в список!',
+                        choices: [
+                            {
+                                text: '🏆 Перейти к ООП',
+                                next: 'oop_intro',
+                                xp: 30
+                            }
+                        ]
+                    },
+                    'oop_intro': {
+                        title: 'Объектно-ориентированное программирование',
+                        text: 'Создай свой первый класс:',
+                        code: 'class Student:\n    def __init__(self, name):\n        self.name = name\n    \n    def introduce(self):\n        return f"Меня зовут {self.name}"',
+                        choices: [
+                            {
+                                text: '🎓 Создать объект',
+                                next: 'oop_success',
+                                xp: 50
+                            }
+                        ]
+                    },
+                    'oop_success': {
+                        title: 'Поздравляем! 🎉',
+                        text: 'Ты освоил основы Python! От начинающего до уверенного разработчика!',
+                        choices: [
+                            {
+                                text: '🔄 Начать заново',
+                                next: 'start',
+                                xp: 0
+                            }
+                        ]
+                    }
+                };
+            }
+
+            showScene(sceneId) {
+                const scene = this.scenes[sceneId];
+                const sceneElement = document.getElementById('gameScene');
+                const choicesContainer = document.getElementById('choicesContainer');
+
+                this.currentScene = sceneId;
+
+                // Обновляем сцену
+                sceneElement.innerHTML = `
+                    <h2>${scene.title}</h2>
+                    <p>${scene.text}</p>
+                    ${scene.code ? `<div class="code-block">${scene.code}</div>` : ''}
+                `;
+
+                // Очищаем и добавляем кнопки выбора
+                choicesContainer.innerHTML = '';
+                scene.choices.forEach((choice, index) => {
+                    const button = document.createElement('button');
+                    button.className = 'choice-btn';
+                    button.innerHTML = choice.text;
+                    button.onclick = () => this.makeChoice(choice);
+                    choicesContainer.appendChild(button);
+                });
+
+                this.saveGame();
+            }
+
+            makeChoice(choice) {
+                // Начисляем опыт
+                this.addXP(choice.xp);
+
+                // Переходим к следующей сцене
+                this.showScene(choice.next);
+            }
+
+            addXP(amount) {
+                this.xp += amount;
+                this.score += amount;
+
+                // Проверяем уровень
+                const xpNeeded = this.level * 100;
+                if (this.xp >= xpNeeded) {
+                    this.level++;
+                    this.xp = 0;
+                    this.showLevelUp();
+                }
+
+                this.updateStats();
+            }
+
+            showLevelUp() {
+                alert(`🎉 Уровень повышен! Теперь ты уровень ${this.level}!`);
+            }
+
+            updateStats() {
+                document.getElementById('level').textContent = this.level;
+                document.getElementById('xp').textContent = `${this.xp}/${this.level * 100}`;
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('tasks').textContent = `${this.completedTasks}/${this.totalTasks}`;
+            }
+
+            saveGame() {
+                const gameData = {
+                    level: this.level,
+                    xp: this.xp,
+                    score: this.score,
+                    currentScene: this.currentScene
+                };
+                localStorage.setItem('pythonAdventure', JSON.stringify(gameData));
+            }
+
+            loadGame() {
+                const saved = localStorage.getItem('pythonAdventure');
+                if (saved) {
+                    const gameData = JSON.parse(saved);
+                    this.level = gameData.level;
+                    this.xp = gameData.xp;
+                    this.score = gameData.score;
+                    this.currentScene = gameData.currentScene;
+                }
+                this.updateStats();
+            }
+        }
+
+        // Запускаем игру при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            window.game = new PythonAdventure();
+        });
+    </script>
+</body>
+</html>
